@@ -1,0 +1,62 @@
+{% extends "base_header.html" %}
+{% block content %}
+<script type="text/javascript">
+  $(document).ready(function(){
+    $("#btn_send_msg").click(function(){
+        var message = $("#chat_text_msg").val();
+        updater.socket.send(message);
+        $("#chat_text_msg").val("");
+      return false;
+    });
+    $(document).keydown(function(event){  
+      if (event.which == "13") {
+         var message = $("#chat_text_msg").val();
+        updater.socket.send(message);
+        $("#chat_text_msg").val("");
+      } 
+      $('#inbox').scrollTop( $('#inbox')[0].scrollHeight );
+});  
+
+    updater.start();
+  });
+  var updater = {
+    socket : null,
+    start : function(){
+      var url = "ws://" + location.host + "/chatsocket";
+      updater.socket = new WebSocket(url);
+      updater.socket.onmessage = function(event) {
+            updater.showMessage(JSON.parse(event.data));
+        }
+    },
+    showMessage : function(message){
+      var existing = $("#m" + message.id);
+      if (existing.length > 0) return;
+      var node = $(message.html);
+      //node.hide();
+      $("#inbox").append(node);
+      //node.slideDown();
+      $('#inbox').scrollTop( $('#inbox')[0].scrollHeight );
+    }
+
+  }
+</script>
+<div class="row-fluid">
+        <div class="box black span4" onTablet="span4" onDesktop="span4">
+          <div class="box-header">
+            <h2><i class="halflings-icon white comment"></i><span class="break"></span>Game Chat Room</h2>
+          </div>
+          <div class="box-content">
+            <ul class="chat metro game yellow" id="inbox">
+            {% for message in messages %}
+              {% include "message.html"%}
+            {% end for %}
+            </ul>
+            <div class="chat-form black">
+              <textarea id="chat_text_msg"></textarea>
+              <button class="btn btn-warning" id="btn_send_msg">Send message</button>
+            </div>  
+          </div>
+        </div><!--/span-->
+</div>
+{% end %}
+
